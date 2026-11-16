@@ -1,9 +1,12 @@
 package app.template.patches.tiemtruyen
 
 import app.morphe.patcher.patch.AppTarget
+import app.morphe.patcher.patch.Compatibility
 
-val TIEMTRUYEN_TARGET = AppTarget(
+val COMPATIBILITY_TIEMTRUYEN = Compatibility(
+    name = "Tiệm Truyện Chữ",
     packageName = "com.tiemtruyenchu.app",
-    version = "1.1.1",
-    versionCode = 58
+    targets = listOf(
+        AppTarget(version = "1.1.1", versionCode = 58)
+    )
 )
