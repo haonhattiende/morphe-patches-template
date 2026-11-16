@@ -57,7 +57,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: ./gradlew :patches:buildAndroid clean --no-daemon
-            - name: Upload Artifact
+
+      - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
           name: morphe-patches
