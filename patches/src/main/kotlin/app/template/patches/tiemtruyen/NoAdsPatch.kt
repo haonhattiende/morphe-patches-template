@@ -1,8 +1,8 @@
 package app.template.patches.tiemtruyen
 
 import app.morphe.patcher.Fingerprint
-import app.morphe.patcher.extensions.InstructionExtensions.replaceInstructions
-import app.morphe.patcher.patch.patch
+import app.morphe.patcher.extensions.MethodExtensions.returnEarly
+import app.morphe.patcher.patch.bytecodePatch
 
 object MobileAdsInitProviderFingerprint : Fingerprint(
     definingClass = "Lcom/google/android/gms/ads/MobileAdsInitProvider;",
@@ -14,15 +14,12 @@ object MobileAdsInitProviderFingerprint : Fingerprint(
     )
 )
 
-val noAdsPatch = patch(
+val noAdsPatch = bytecodePatch(
     name = "Xóa quảng cáo",
-    description = "Chặn Google AdMob khởi động, từ đó loại bỏ quảng cáo.",
-    compatibleWith = listOf(TIEMTRUYEN_TARGET)
+    description = "Chặn Google AdMob khởi động, từ đó loại bỏ quảng cáo."
 ) {
+    compatibleWith(COMPATIBILITY_TIEMTRUYEN)
     execute {
-        val targetMethod = MobileAdsInitProviderFingerprint.method
-        
-        // Thêm số 0 vào trước chuỗi "return-void"
-        targetMethod.replaceInstructions(0, "return-void")
+        MobileAdsInitProviderFingerprint.method.returnEarly()
     }
 }
