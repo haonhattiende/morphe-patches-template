@@ -1,6 +1,6 @@
 package app.template.patches.tiemtruyen
 
-import app.morphe.patcher.extensions.addInstructions
+import app.morphe.patcher.extensions.InstructionExtensions.addInstructions
 import app.morphe.patcher.patch.bytecodePatch
 
 @Suppress("unused")
@@ -8,11 +8,8 @@ val pairIPBypassPatch = bytecodePatch(
     name = "Bypass PairIP License Check",
     description = "Vô hiệu hóa kiểm tra PairIP cho phép cài đặt từ nguồn ngoài (không qua Google Play)."
 ) {
-    // Đảm bảo cả 2 fingerprint đều tồn tại thì patch mới chạy
-    compatibleWith(
-        performLocalInstallerCheckFingerprint,
-        processResponseFingerprint
-    )
+    // Chỉ truyền thông tin Compatibility, không truyền Fingerprint vào đây
+    compatibleWith(COMPATIBILITY_TIEMTRUYEN)
 
     execute {
         // 1. Vá performLocalInstallerCheck: Ép luôn trả về true
