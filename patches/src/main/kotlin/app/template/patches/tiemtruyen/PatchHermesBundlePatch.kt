@@ -1,7 +1,6 @@
 package app.template.patches.tiemtruyen
 
 import app.morphe.patcher.patch.resourcePatch
-import java.io.File
 import java.security.MessageDigest
 
 private const val BUNDLE_ENTRY_PATH = "assets/index.android.bundle"
@@ -14,7 +13,8 @@ private fun findPatternOffsets(data: ByteArray): List<Int> {
     val offsets = ArrayList<Int>()
     var i = 0
     while (i < limit) {
-        if (data[i] == 0x37.toByte() &&
+        if (
+            data[i] == 0x37.toByte() &&
             data[i + 4] == 0xFF.toByte() &&
             data[i + 5] == 0x3A.toByte()
         ) {
@@ -41,9 +41,8 @@ val patchHermesBundle = resourcePatch(
 ) {
     compatibleWith(COMPATIBILITY_TIEMTRUYEN)
 
-    execute { context ->
-        // Trong resourcePatch, context đại diện cho thư mục giải nén APK
-        val bundleFile = context[BUNDLE_ENTRY_PATH]
+    execute {
+        val bundleFile = get(BUNDLE_ENTRY_PATH)
         check(bundleFile.exists()) {
             "Không tìm thấy $BUNDLE_ENTRY_PATH trong gói ứng dụng."
         }
