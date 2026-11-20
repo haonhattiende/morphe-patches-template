@@ -1,4 +1,4 @@
-package app.morphe.patches.tiemtruyenchu.bundle
+package app.template.patches.tiemtruyen
 
 import app.morphe.patcher.patch.BytecodePatchContext
 import app.morphe.patcher.patch.byteArrayPatch
@@ -53,15 +53,41 @@ private fun updateHbcSha1Trailer(data: ByteArray) {
     System.arraycopy(digest, 0, data, payloadEnd, SHA1_TRAILER_SIZE)
 }
 
+/**
+ * Kiểm tra 20 byte cuối file đã khớp chuẩn SHA-1 của phần dữ liệu phía trước chưa.
+ */
+private fun verifyHbcSha1Trailer(data: ByteArray): Boolean {
+    if (data.size <= SHA1_TRAILER_SIZE) return false
+    val payloadEnd = data.size - SHA1_TRAILER_SIZE
+    val expected = MessageDigest.getInstance("SHA-1").digest(data.copyOfRange(0, payloadEnd))
+    return data.copyOfRange(payloadEnd, data.size).contentEquals(expected)
+}
+
+private fun findBundleFile(relativeEntryPath: String): File? {
+    val normalizedTarget = relativeEntryPath.replace('\\', '/')
+    val searchRoots = listOfNotNull(
+        File(".").takeIf { it.exists() },
+        File("build").takeIf { it.exists() },
+    )
+
+    for (root in searchRoots) {
+        val found = root.walkTopDown()
+            .firstOrNull { file ->
+                file.isFile && file.path.replace('\\', '/').endsWith("/$normalizedTarget")
+            }
+        if (found != null) return found
+    }
+    return null
+}
+
 @Suppress("unused")
 val patchHermesBundle = byteArrayPatch(
     name = "Patch Hermes bundle flags",
     description = "Tự động dò mẫu bytecode, ghi đè LoadConstTrue (0x78) và tính lại SHA-1 cuối file index.android.bundle.",
 ) {
-    compatibleWith("com.tiemtruyenchu.app")
+    compatibleWith(COMPATIBILITY_TIEMTRUYEN)
 
     execute { _: BytecodePatchContext ->
-        // Tìm file index.android.bundle trong thư mục giải nén của patcher
         val bundleFile = findBundleFile(BUNDLE_ENTRY_PATH)
             ?: error("Không tìm thấy $BUNDLE_ENTRY_PATH trong gói ứng dụng.")
 
@@ -92,23 +118,10 @@ val patchHermesBundle = byteArrayPatch(
         }
 
         updateHbcSha1Trailer(data)
+        check(verifyHbcSha1Trailer(data)) {
+            "Xác minh SHA-1 thất bại sau khi ghi đè $BUNDLE_ENTRY_PATH."
+        }
+
         bundleFile.writeBytes(data)
     }
-}
-
-private fun findBundleFile(relativeEntryPath: String): File? {
-    val normalizedTarget = relativeEntryPath.replace('\\', '/')
-    val searchRoots = listOfNotNull(
-        File(".").takeIf { it.exists() },
-        File("build").takeIf { it.exists() },
-    )
-
-    for (root in searchRoots) {
-        val found = root.walkTopDown()
-            .firstOrNull { file ->
-                file.isFile && file.path.replace('\\', '/').endsWith("/$normalizedTarget")
-            }
-        if (found != null) return found
-    }
-    return null
 }
